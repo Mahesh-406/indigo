@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="5402685c-3d47-490a-8226-6668a3737022" >
+		<http:request-connection host="localhoat" port="8081" />
+	</http:request-config>
+	<flow name="indigoflightsFlow" doc:id="a1512af6-4814-4c2a-8f4f-f64d9d6daf16" >
+		<logger level="INFO" doc:name="Logger" doc:id="40066b10-99aa-423a-a7ec-dc5c1929728d" message="final responce is ...........................#[payload]"/>
+		<http:request method="GET" doc:name="Request" doc:id="68287c73-6596-424c-a63c-92a9fc137914" config-ref="HTTP_Request_configuration" path="/api/getflights">
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	from : attributes.queryParams.source,
+	to : attributes.queryParams.destination,
+	depatureDate : attributes.queryParams.doj
+}]]]></http:query-params>
+		</http:request>
+		<logger level="INFO" doc:name="Logger" doc:id="a7579cf6-f87b-432d-ab7f-807b9f95a6c0" message="responce from the db........................#[payload]"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="3b13e359-5369-40fe-b772-de9716ec54e7" >
+				<ee:transform doc:name="Transform Message" doc:id="0e44fb6b-fe64-47fd-94a7-700fced4d7b7" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"statusCode":500,
+	"message":"unble to process the request,please after a some time"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>
